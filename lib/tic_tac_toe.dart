@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:many_games/home_page.dart';
 import 'package:many_games/reusable.dart';
@@ -11,6 +15,7 @@ class TicTacToe extends StatefulWidget {
 
 class _TicTacToeState extends State<TicTacToe> {
   List<List<Icon?>> board = List.generate(3, (_) => List.filled(3, null));
+  final assetsAudioPlayer = AssetsAudioPlayer();
   int scoreKeeperP1 = 0;
   int scoreKeeperP2 = 0;
   int rounds = 1;
@@ -18,69 +23,83 @@ class _TicTacToeState extends State<TicTacToe> {
   bool isPlayer1Winner = false;
   bool isPlayer2Winner = false;
   Color? winningColor;
+  Timer? confettiStopTimer;
+  final controller = ConfettiController();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.amberAccent,
-      body: Column(
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height * 0.1,
-          ),
-          Container(
-            margin: const EdgeInsets.only(bottom: 20, left: 30),
-            child: Text(
-              'ROUNDS :  $rounds',
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Color.fromARGB(255, 78, 74, 74)),
-            ),
-          ),
-          Reusable.createPlayers('${HomePage.player1Name}:  $scoreKeeperP1',
-              Icons.circle_outlined, Colors.blue),
-          const SizedBox(
-            height: 20,
-          ),
-          Reusable.createPlayers('${HomePage.player2Name}:  $scoreKeeperP2', Icons.close,
-              Colors.red),
-          const SizedBox(
-            height: 60,
-          ),
-          createRow(0),
-          createRow(1),
-          createRow(2),
-          const SizedBox(
-            height: 40,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        Scaffold(
+          backgroundColor: Colors.amberAccent,
+          body: Column(
             children: [
-              Reusable.buildButtons(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                label: 'BACK',
-                symbol: Icons.arrow_back,
+              Container(
+                height: MediaQuery.of(context).size.height * 0.1,
               ),
-              Reusable.buildButtons(
-                onTap: () {
-                  setState(() {
-                    ++rounds;
-                    board = List.generate(3, (_) => List.filled(3, null));
-                    isPlayer1Turn = true;
-                    isPlayer1Winner = false;
-                    isPlayer2Winner = false;
-                  });
-                },
-                label: 'PLAY AGAIN',
-                symbol: Icons.change_circle,
+              Container(
+                margin: const EdgeInsets.only(bottom: 20, left: 30),
+                child: Text(
+                  'ROUNDS :  $rounds',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color.fromARGB(255, 78, 74, 74)),
+                ),
+              ),
+              Reusable.createPlayers('${HomePage.player1Name}:  $scoreKeeperP1',
+                  Icons.circle_outlined, Colors.blue),
+              const SizedBox(
+                height: 20,
+              ),
+              Reusable.createPlayers('${HomePage.player2Name}:  $scoreKeeperP2',
+                  Icons.close, Colors.red),
+              const SizedBox(
+                height: 60,
+              ),
+              createRow(0),
+              createRow(1),
+              createRow(2),
+              const SizedBox(
+                height: 40,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Reusable.buildButtons(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    label: 'BACK',
+                    symbol: Icons.arrow_back,
+                  ),
+                  Reusable.buildButtons(
+                    onTap: () {
+                      setState(() {
+                        controller.stop();
+                        ++rounds;
+                        board = List.generate(3, (_) => List.filled(3, null));
+                        isPlayer1Turn = true;
+                        isPlayer1Winner = false;
+                        isPlayer2Winner = false;
+                      });
+                    },
+                    label: 'PLAY AGAIN',
+                    symbol: Icons.change_circle,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        ConfettiWidget(
+          confettiController: controller,
+          shouldLoop: true,
+          blastDirectionality: BlastDirectionality.explosive,
+          numberOfParticles: 32,
+        ),
+      ],
     );
   }
 
@@ -95,8 +114,6 @@ class _TicTacToeState extends State<TicTacToe> {
     );
   }
 
-  
-
   Widget createBox(int row, int col) {
     double sz = MediaQuery.of(context).size.width * 0.3;
     Icon? object = board[row][col];
@@ -105,6 +122,10 @@ class _TicTacToeState extends State<TicTacToe> {
       onTap: () {
         if (object == null && !isPlayer1Winner && !isPlayer2Winner) {
           setState(() {
+            final assetsAudioPlayer = AssetsAudioPlayer();
+            assetsAudioPlayer.open(
+              Audio("assets/audios/tap.mp3"),
+            );
             board[row][col] = isPlayer1Turn
                 ? const Icon(
                     Icons.circle_outlined,
@@ -125,14 +146,12 @@ class _TicTacToeState extends State<TicTacToe> {
         duration: const Duration(milliseconds: 500),
         width: sz,
         height: sz,
-        color:const Color.fromARGB(255, 163, 188, 48),
+        color: const Color.fromARGB(255, 163, 188, 48),
         margin: const EdgeInsets.all(5),
         child: object,
       ),
     );
   }
-
-  
 
   void checkWinner(int row, int col) {
     // Check rows, columns, and diagonals for a winner.
@@ -140,6 +159,16 @@ class _TicTacToeState extends State<TicTacToe> {
         checkColumn(col) ||
         checkDiagonal() ||
         checkAntiDiagonal()) {
+      setState(() {
+        assetsAudioPlayer.open(
+          Audio("assets/audios/winner.mp3"),
+        );
+        controller.play();
+        // Start a timer to stop the confetti after 5 seconds
+        confettiStopTimer = Timer(Duration(seconds: 5), () {
+          controller.stop();
+        });
+      });
       if (isPlayer1Turn) {
         setState(() {
           isPlayer1Winner = true;
@@ -153,6 +182,7 @@ class _TicTacToeState extends State<TicTacToe> {
           winningColor = Colors.white;
         });
       }
+  
     }
   }
 

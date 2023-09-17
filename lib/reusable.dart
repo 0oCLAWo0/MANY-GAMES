@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Reusable {
-
- static Row createPlayers(String label, IconData icon, Color iconColor) {
+  static Row createPlayers(String label, IconData icon, Color iconColor) {
     return Row(
       children: [
         const SizedBox(
@@ -30,7 +29,7 @@ class Reusable {
     );
   }
 
- static Widget buildButtons({
+  static Widget buildButtons({
     required VoidCallback onTap,
     required String label,
     required IconData symbol,
@@ -58,8 +57,4 @@ class Reusable {
       ),
     );
   }
-  
-
 }
-
- 
