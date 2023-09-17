@@ -32,6 +32,9 @@ Explore a world of entertainment with Many Games, a Flutter project that offers 
     <td style="padding-left: 20px;">
       <img src="Screenshots/6.jpg" width="200">
     </td>
+    <td style="padding-left: 20px;">
+      <img src="Screenshots/7.jpg" width="200">
+    </td>
   </tr>
 </table>
 
