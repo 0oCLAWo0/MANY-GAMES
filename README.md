@@ -1,12 +1,13 @@
 # Many Games
 
-**A versatile collection of fun games for Android**
+**A versatile collection of fun games for Android/IOS**
 
 Explore a world of entertainment with Many Games, a Flutter project that offers a range of engaging and interactive games for Android users.
 
 ## Platform
 
-- Tested and optimized for Android
+- Tested on Android
+- Optimised for both Android and IOS
 
 ## Get the APK
 - **[Download APK](https://drive.google.com/file/d/1dxooN29NDlHZgFGzAv8jqmmlXs1PDns2/view?usp=sharing)**
