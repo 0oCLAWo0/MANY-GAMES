@@ -5,6 +5,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:many_games/home_page.dart';
 import 'package:many_games/reusable.dart';
+import 'package:quickalert/quickalert.dart';
 
 class TicTacToe extends StatefulWidget {
   const TicTacToe({super.key});
@@ -14,14 +15,15 @@ class TicTacToe extends StatefulWidget {
 }
 
 class _TicTacToeState extends State<TicTacToe> {
-  List<List<Icon?>> board = List.generate(3, (_) => List.filled(3, null));
   final assetsAudioPlayer = AssetsAudioPlayer();
+  List<List<Icon?>> board = List.generate(3, (_) => List.filled(3, null));
   int scoreKeeperP1 = 0;
   int scoreKeeperP2 = 0;
   int rounds = 1;
   bool isPlayer1Turn = true;
   bool isPlayer1Winner = false;
   bool isPlayer2Winner = false;
+  int turnCount = 0;
   Color? winningColor;
   Timer? confettiStopTimer;
   final controller = ConfettiController();
@@ -75,16 +77,7 @@ class _TicTacToeState extends State<TicTacToe> {
                     symbol: Icons.arrow_back,
                   ),
                   Reusable.buildButtons(
-                    onTap: () {
-                      setState(() {
-                        controller.stop();
-                        ++rounds;
-                        board = List.generate(3, (_) => List.filled(3, null));
-                        isPlayer1Turn = true;
-                        isPlayer1Winner = false;
-                        isPlayer2Winner = false;
-                      });
-                    },
+                    onTap: playAgainLogic,
                     label: 'PLAY AGAIN',
                     symbol: Icons.change_circle,
                   ),
@@ -126,6 +119,7 @@ class _TicTacToeState extends State<TicTacToe> {
             assetsAudioPlayer.open(
               Audio("assets/audios/tap.mp3"),
             );
+            turnCount++;
             board[row][col] = isPlayer1Turn
                 ? const Icon(
                     Icons.circle_outlined,
@@ -160,12 +154,13 @@ class _TicTacToeState extends State<TicTacToe> {
         checkDiagonal() ||
         checkAntiDiagonal()) {
       setState(() {
+        final assetsAudioPlayer = AssetsAudioPlayer();
         assetsAudioPlayer.open(
           Audio("assets/audios/winner.mp3"),
         );
         controller.play();
         // Start a timer to stop the confetti after 5 seconds
-        confettiStopTimer = Timer(Duration(seconds: 5), () {
+        confettiStopTimer = Timer(const Duration(seconds: 5), () {
           controller.stop();
         });
       });
@@ -174,15 +169,18 @@ class _TicTacToeState extends State<TicTacToe> {
           isPlayer1Winner = true;
           scoreKeeperP1++;
           winningColor = Colors.white;
+          showWinnerPopUp(1);
         });
       } else {
         setState(() {
           isPlayer2Winner = true;
           scoreKeeperP2++;
           winningColor = Colors.white;
+          showWinnerPopUp(2);
         });
       }
-  
+    } else if (turnCount == 9) {
+      showWinnerPopUp(0);
     }
   }
 
@@ -207,5 +205,44 @@ class _TicTacToeState extends State<TicTacToe> {
       return board[0][2] == board[1][1] && board[1][1] == board[2][0];
     }
     return false;
+  }
+
+  void showWinnerPopUp(int result) {
+    QuickAlert.show(
+      widget: Center(
+        child: Text(
+         result == 0
+              ? 'IT\'S A TIE'
+              : result == 1
+                  ? 'CONGRATULATIONS ${HomePage.player1Name}'
+                  : 'CONGRATULATIONS ${HomePage.player2Name}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: Color.fromARGB(255, 67, 8, 78),
+                  ),
+        ),
+      ),
+      barrierDismissible: true,
+      onConfirmBtnTap: () {
+        playAgainLogic();
+        Navigator.pop(context);
+      },
+      context: context,
+      type: QuickAlertType.custom,
+      confirmBtnText: 'PLAY AGAIN',
+      confirmBtnColor: const Color.fromARGB(255, 2, 10, 51),
+    );
+  }
+
+  void playAgainLogic() {
+    setState(() {
+      controller.stop();
+      ++rounds;
+      board = List.generate(3, (_) => List.filled(3, null));
+      isPlayer1Turn = true;
+      isPlayer1Winner = false;
+      isPlayer2Winner = false;
+      turnCount = 0;
+    });
   }
 }
